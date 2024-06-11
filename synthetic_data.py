@@ -22,8 +22,8 @@ class CameraInfo(NamedTuple):
     height: int
 
 
-# Function to convert DICOM to lossless PNG and extract camera information
-def convert_dicom_to_png_and_extract_info(dicom_path, output_folder):
+# Extract data from the dicom image
+def extract_data_from_dicom_image(dicom_path, output_folder):
     try:
         # Read DICOM file
         dicom_data = pydicom.dcmread(dicom_path)
@@ -105,7 +105,7 @@ def getCameraInfos():
     for filename in os.listdir(dicom_folder):
         if filename.endswith('.dcm'):
             dicom_path = os.path.join(dicom_folder, filename)
-            camera_info = convert_dicom_to_png_and_extract_info(dicom_path, output_folder)
+            camera_info = extract_data_from_dicom_image(dicom_path, output_folder)
             if camera_info:
                 camera_infos.append(camera_info)
     return camera_infos
