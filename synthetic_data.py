@@ -91,8 +91,8 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         return None
 
 # Path to DICOM folder and output folder for PNG images
-dicom_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/gaussian-splatting/dicom"
-output_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/gaussian-splatting/images"
+dicom_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/CT-data/dicom/lungCT-LC"
+output_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/gaussian-splatting/images"
 camera_info_filename = "camera_infos.json"
 
 # Create output folder if it does not exist
