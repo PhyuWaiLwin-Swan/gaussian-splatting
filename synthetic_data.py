@@ -1,5 +1,8 @@
+import math
 import os
 import json
+import struct
+
 import pydicom
 import cv2
 import numpy as np
@@ -36,40 +39,99 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         output_path = os.path.join(output_folder, os.path.basename(dicom_path).replace('.dcm', '.png'))
         cv2.imwrite(output_path, normalized_array)
 
-        # Extract relevant metadata
-        detector_rows = int(dicom_data.Rows)
-        detector_columns = int(dicom_data.Columns)
-        source_to_detector_distance = float(dicom_data[0x0018, 0x1110].value)  # Replace with the correct tag
-        source_to_patient_distance = float(dicom_data[0x0018, 0x1111].value)  # Replace with the correct tag
+        encrypt_type = 'little'
+        if dicom_data.file_meta.TransferSyntaxUID == '1.2.840.10008.1.2.2':
+            encrypt_type = 'big'
 
-        # Calculate Field of View (FOV)
-        pixel_spacing = dicom_data.PixelSpacing
-        fov_x = detector_columns * pixel_spacing[0]
-        fov_y = detector_rows * pixel_spacing[1]
 
-        # Calculate intrinsic parameters
-        f_x = detector_columns / (2 * tan(radians(fov_x) / 2))
-        f_y = detector_rows / (2 * tan(radians(fov_y) / 2))
-        c_x = detector_columns / 2
-        c_y = detector_rows / 2
+        pixel_spacing = dicom_data.get((0x0018, 0x0090)).value
+        detector_rows = dicom_data.get((0x0028, 0x0010)).value
+        detector_columns = dicom_data[0x0028, 0x0011].value
+        source_to_patient = struct.unpack('<f', dicom_data.get((0x7031, 0x1003)).value)[0]
+        source_to_detector_distance = struct.unpack('<f', dicom_data.get((0x7031, 0x1031)).value)[0]
+        col_width = struct.unpack('<f', dicom_data.get((0x7029, 0x1002)).value)[0]
+        row_width = struct.unpack('<f', dicom_data.get((0x7029, 0x1006)).value)[0]
+        theta = struct.unpack('<f', dicom_data.get((0x7031, 0x1001)).value)[0]
+        table_movement = struct.unpack('<f', dicom_data.get((0x7031, 0x1002)).value)[0]
+        detector_shape = dicom_data.get((0x7029, 0x100B)).value
+        typeofProjectData = dicom_data.get((0x7037, 0x1009)).value
+        pitch = dicom_data.get((0x0018, 0x9311)).value
+        # off_theta = struct.unpack('<f', dicom_data.get((0x7033, 0x100B)).value)[0]
+        # theta += off_theta  # Apply offset to angle
+        o_p = struct.unpack('<f', dicom_data.get((0x7033, 0x100D)).value)[0]
+        o_z = struct.unpack('<f', dicom_data.get((0x7033, 0x100C)).value)[0]
+        # p += o_p
+        # z += o_z
+        detector_column_width = detector_columns * col_width
+        detector_row_width = detector_rows * row_width
 
-        K = np.array([
-            [f_x, 0, c_x],
-            [0, f_y, c_y],
-            [0, 0, 1]
-        ])
+        bean_angle_x = math.atan((detector_columns * col_width / 2 ) /source_to_detector_distance)
+        bean_angle_y = math.atan((detector_rows * row_width/2)/source_to_detector_distance)
 
-        # Define extrinsic parameters (assuming initial angle 0 for demonstration)
-        theta = 0  # Angle in radians
-        R = np.array( [
+
+
+        fov_x = math.tan(bean_angle_x) * source_to_patient * 2
+        fov_y = math.tan(bean_angle_y) * source_to_patient * 2
+
+        fov_x = bean_angle_x*2
+        fov_y = bean_angle_y*2
+        # Rotation matrix
+        R = np.array([
             [cos(theta), -sin(theta), 0],
             [sin(theta), cos(theta), 0],
             [0, 0, 1]
         ])
+        phi1 = -np.pi
+        R1 = np.array([[1.0, 0.0, 0.0],
+                       [0.0, np.cos(phi1), -np.sin(phi1)],
+                       [0.0, np.sin(phi1), np.cos(phi1)]])
+        phi2 = np.pi
+        R2 = np.array([[np.cos(phi2), -np.sin(phi2), 0.0],
+                       [np.sin(phi2), np.cos(phi2), 0.0],
+                       [0.0, 0.0, 1.0]])
+        R3 = np.array([[np.cos(theta), -np.sin(theta), 0.0],
+                       [np.sin(theta), np.cos(theta), 0.0],
+                       [0.0, 0.0, 1.0]])
+        R = np.dot(np.dot(R3, R2), R1)
+        # t = np.array([source_to_patient  * np.cos(theta), source_to_patient  * np.sin(theta), pitch/(2*math.pi) * theta])
 
-        t = np.array([0, 0, -source_to_patient_distance])  # Translation along z-axis
 
 
+        # R = np.array([
+        #     [1,0, 0],
+        #     [0,1, 0],
+        #     [0, 0, 1]
+        # ])
+        #rotate around horizontal in world axis ,which is x
+        # R = np.array([
+        #     [1, 0, 0],
+        #     [0, cos(theta), -sin(theta)],
+        #     [0, sin(theta), cos(theta)]
+        # ])
+        #rotate on y axis
+        # R = np.array([
+        #     [cos(theta), 0, sin(theta)],
+        #     [0, 1, 0],
+        #     [-sin(theta), 0, cos(theta)]
+        # ])
+        # Translation vector
+
+
+
+
+        x = -source_to_patient*math.sin(theta)
+        y = -source_to_patient*math.cos(theta)
+        z = table_movement
+        #source to pati
+        # ent is the z direction in camera view, x is point up and down in rotaiton so it equal to y in world coordinate, z is always horizontal
+        # t = np.array([z,y,-source_to_patient])  # Translation vector
+        # t= np.array([z,y,-source_to_patient])
+        # Calculate width and height in pixels
+        # t = np.array([z, y, source_to_patient + pitch/(2*math.pi) * theta])
+        # t = np.array([0, 0, source_to_patient + pitch / (2 * math.pi) * theta])
+        t = np.array([0, 0, -z])
+        # t = np.array(
+            # [source_to_patient * np.cos(theta), source_to_patient * np.sin(theta), -z])
         # Extract camera information
         camera_info = CameraInfo(
             uid=dicom_data.InstanceNumber,  # Using InstanceNumber as UID
@@ -80,19 +142,20 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
             image=Image.open(output_path).convert('RGB'),  # Base64 encoded image
             image_path=output_path,
             image_name=os.path.basename(output_path),
-            width=normalized_array.shape[1],
-            height=normalized_array.shape[0],
+            width=detector_column_width,
+            height=detector_row_width,
         )
 
-        print(f"Converted {dicom_path} to lossless PNG: {output_path}")
+        # print(f"Converted {dicom_path} to lossless PNG: {output_path}")
         return camera_info
     except Exception as e:
         print(f"Error converting {dicom_path} to lossless PNG: {e}")
         return None
 
 # Path to DICOM folder and output folder for PNG images
-dicom_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/CT-data/dicom/lungCT-LC"
-output_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/gaussian-splatting/images"
+dicom_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/CT-data/dicom/lung_PD"
+# dicom_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/CT-data/dicom/C001/1.2.840.113713.4.100.1.2.123467221304001792631562653249153/1.2.840.113713.4.100.1.2.259331308512386262319022488881735"
+output_folder = ("/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/gaussian-splatting/images")
 camera_info_filename = "camera_infos.json"
 
 # Create output folder if it does not exist
@@ -111,3 +174,5 @@ def getCameraInfos():
     return camera_infos
 
 print("Conversion complete.")
+
+getCameraInfos()
