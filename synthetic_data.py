@@ -61,7 +61,7 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         o_p = struct.unpack('<f', dicom_data.get((0x7033, 0x100D)).value)[0]
         o_z = struct.unpack('<f', dicom_data.get((0x7033, 0x100C)).value)[0]
         # p += o_p
-        # z += o_z
+        table_movement -= o_z
         detector_column_width = detector_columns * col_width
         detector_row_width = detector_rows * row_width
 
@@ -73,19 +73,19 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         fov_x = math.tan(bean_angle_x) * source_to_patient * 2
         fov_y = math.tan(bean_angle_y) * source_to_patient * 2
 
-        fov_x = bean_angle_x*2
-        fov_y = bean_angle_y*2
+        fov_x = bean_angle_x/2
+        fov_y = bean_angle_y/2
         # Rotation matrix
         R = np.array([
             [cos(theta), -sin(theta), 0],
             [sin(theta), cos(theta), 0],
             [0, 0, 1]
         ])
-        phi1 = -np.pi
+        phi1 = -np.pi*2
         R1 = np.array([[1.0, 0.0, 0.0],
                        [0.0, np.cos(phi1), -np.sin(phi1)],
                        [0.0, np.sin(phi1), np.cos(phi1)]])
-        phi2 = np.pi
+        phi2 = np.pi*2
         R2 = np.array([[np.cos(phi2), -np.sin(phi2), 0.0],
                        [np.sin(phi2), np.cos(phi2), 0.0],
                        [0.0, 0.0, 1.0]])
@@ -121,7 +121,7 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
 
         x = -source_to_patient*math.sin(theta)
         y = -source_to_patient*math.cos(theta)
-        z = table_movement
+        z = table_movement - 213.60
         #source to pati
         # ent is the z direction in camera view, x is point up and down in rotaiton so it equal to y in world coordinate, z is always horizontal
         # t = np.array([z,y,-source_to_patient])  # Translation vector
