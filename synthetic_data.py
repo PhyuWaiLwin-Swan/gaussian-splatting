@@ -34,7 +34,7 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         # Normalize pixel values to the range [0, 255]
         normalized_array = ((dicom_data.pixel_array - dicom_data.pixel_array.min()) /
                             (dicom_data.pixel_array.max() - dicom_data.pixel_array.min()) * 255).astype(np.uint8)
-
+        normalized_array = cv2.rotate(normalized_array, cv2.ROTATE_180)
         # Convert DICOM to lossless PNG
         output_path = os.path.join(output_folder, os.path.basename(dicom_path).replace('.dcm', '.png'))
         cv2.imwrite(output_path, normalized_array)
@@ -73,8 +73,8 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         fov_x = math.tan(bean_angle_x) * source_to_patient * 2
         fov_y = math.tan(bean_angle_y) * source_to_patient * 2
 
-        fov_x = bean_angle_x/10
-        fov_y = bean_angle_y/100
+        fov_x = bean_angle_x
+        fov_y = bean_angle_y
         # Rotation matrix
         R = np.array([
             [cos(theta), -sin(theta), 0],
@@ -129,7 +129,7 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         # Calculate width and height in pixels
         # t = np.array([z, y, source_to_patient + pitch/(2*math.pi) * theta])
         # t = np.array([0, 0, source_to_patient + pitch / (2 * math.pi) * theta])
-        t = np.array([0, 0, -z])
+        t = np.array([0, 0, -z/2])
         # t = np.array(
             # [source_to_patient * np.cos(theta), source_to_patient * np.sin(theta), -z])
         # Extract camera information
