@@ -73,8 +73,8 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         fov_x = math.tan(bean_angle_x) * source_to_patient * 2
         fov_y = math.tan(bean_angle_y) * source_to_patient * 2
 
-        fov_x = bean_angle_x/2
-        fov_y = bean_angle_y/2
+        fov_x = bean_angle_x/10
+        fov_y = bean_angle_y/100
         # Rotation matrix
         R = np.array([
             [cos(theta), -sin(theta), 0],
