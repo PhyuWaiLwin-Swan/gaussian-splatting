@@ -23,8 +23,8 @@ from plyfile import PlyData, PlyElement
 from utils.sh_utils import SH2RGB
 from scene.gaussian_model import BasicPointCloud
 
-from synthetic_data import getCameraInfos
-
+# from synthetic_data import getCameraInfos
+from drrImage import getCameraInfos
 
 class CameraInfo(NamedTuple):
     uid: int

@@ -44,15 +44,9 @@ def extract_data_from_png_image(png_path, output_folder, col_width=0.05, row_wid
         current_angle = start_angle + idx * angle_interval
         theta = np.radians(current_angle)  # Convert angle to radians
 
-        # Save the image as PNG
         output_file = f"{os.path.basename(png_path).replace('.png', '')}_angle_{current_angle:.1f}.png"
         output_path = os.path.join(output_folder, output_file)
 
-        # Debug: Ensure correct file path and image
-        # print(f"Saving image to {output_path}")
-        # print(f"Image shape: {rgba_image.shape}")
-
-        # Check if OpenCV writes the image successfully
         success = cv2.imwrite(output_path, rgba_image)
         if not success:
             raise IOError(f"Failed to write the image to {output_path}")
@@ -102,7 +96,7 @@ def getCameraInfos():
     camera_infos = []
 
     # List all .png files in the folder
-    png_files = [f for f in os.listdir(png_folder) if f.endswith('.png')]
+    png_files = [f for f in os.listdir(png_folder) if f.endswith('.png')and int(f.split('xray')[-1].split('.')[0]) % 1 == 0]
 
     # Iterate over each .png file
     for filename in png_files:
@@ -120,7 +114,7 @@ def getCameraInfos():
 
 
 # Main program setup
-png_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/CT-data/png/drrLung"
+png_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/CT-data/png/knee"
 output_folder = "/csse/users/pwl24/Desktop/fourth_year_2024/Seng_402/3dgs-CT/gaussian-splatting/images"
 os.makedirs(output_folder, exist_ok=True)
 getCameraInfos()

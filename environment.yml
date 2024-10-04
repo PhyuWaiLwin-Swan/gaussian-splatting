@@ -1,17 +1,4 @@
-name: gaussian_splatting
+name: 3DGS_Xray
 channels:
-  - pytorch
   - conda-forge
-  - defaults
-dependencies:
-  - cudatoolkit=11.6
-  - plyfile
-  - python=3.7.13
-  - pip=22.3.1
-  - pytorch=1.12.1
-  - torchaudio=0.12.1
-  - torchvision=0.13.1
-  - tqdm
-  - pip:
-    - submodules/diff-gaussian-rasterization
-    - submodules/simple-knn
+prefix: /csse/users/pwl24/miniforge3/envs/3DGS_Xray

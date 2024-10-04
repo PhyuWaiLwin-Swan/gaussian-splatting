@@ -55,11 +55,17 @@ if not args.skip_matching:
     ### Bundle adjustment
     # The default Mapper tolerance is unnecessarily large,
     # decreasing it speeds up bundle adjustment steps.
+    # mapper_cmd = (colmap_command + " mapper \
+    #     --database_path " + args.source_path + "/distorted/database.db \
+    #     --image_path "  + args.source_path + "/input \
+    #     --output_path "  + args.source_path + "/distorted/sparse \
+    #     --Mapper.ba_global_function_tolerance=0.000001")
     mapper_cmd = (colmap_command + " mapper \
         --database_path " + args.source_path + "/distorted/database.db \
-        --image_path "  + args.source_path + "/input \
-        --output_path "  + args.source_path + "/distorted/sparse \
-        --Mapper.ba_global_function_tolerance=0.000001")
+        --image_path " + args.source_path + "/input \
+        --output_path " + args.source_path + "/distorted/sparse \
+        --Mapper.ba_global_function_tolerance=0.000001 \
+        --Mapper.min_num_matches 10")
     exit_code = os.system(mapper_cmd)
     if exit_code != 0:
         logging.error(f"Mapper failed with code {exit_code}. Exiting.")

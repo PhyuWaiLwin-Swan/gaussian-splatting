@@ -34,7 +34,8 @@ def extract_data_from_dicom_image(dicom_path, output_folder):
         # Normalize pixel values to the range [0, 255]
         normalized_array = ((dicom_data.pixel_array - dicom_data.pixel_array.min()) /
                             (dicom_data.pixel_array.max() - dicom_data.pixel_array.min()) * 255).astype(np.uint8)
-        normalized_array = cv2.rotate(normalized_array, cv2.ROTATE_180)
+        normalized_array = cv2.rotate(normalized_array, cv2.ROTATE_90_CLOCKWISE)
+        normalized_array = np.where(normalized_array > 120, 1, 0).astype(np.uint8) * 255
         # Convert DICOM to lossless PNG
         output_path = os.path.join(output_folder, os.path.basename(dicom_path).replace('.dcm', '.png'))
         cv2.imwrite(output_path, normalized_array)
@@ -175,4 +176,62 @@ def getCameraInfos():
 
 print("Conversion complete.")
 
-getCameraInfos()
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+
+def plot_camera(ax, position, rotation_matrix, color='blue', length=0.2):
+    """Plot the camera position and its facing direction."""
+    ax.scatter(position[0], position[1], position[2], color='red', s=50)
+
+    # Plot the camera's facing direction
+    # The direction is typically the third column of the rotation matrix
+    direction = rotation_matrix[:, 2]  # Extract the forward direction (Z-axis in camera space)
+    ax.quiver(position[0], position[1], position[2],
+              direction[0], direction[1], direction[2],
+              color=color, length=0.02, normalize=True)
+
+    direction1 = rotation_matrix[:, 1]  # Extract the forward direction (Z-axis in camera space)
+    ax.quiver(position[0], position[1], position[2],
+              direction1[0], direction1[1], direction1[2],
+              color='green', length=0.02, normalize=True)
+
+    direction2 = rotation_matrix[:, 0]  # Extract the forward direction (Z-axis in camera space)
+    ax.quiver(position[0], position[1], position[2],
+                  direction2[0], direction2[1], direction2[2],
+                  color='yellow', length=0.02, normalize=True)
+
+def visualize_camera_info(camera_infos):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for idx, camera_info in enumerate(camera_infos):
+        # Extract the camera's position and rotation matrix
+        position = camera_info.T
+        rotation_matrix = camera_info.R
+
+        # Plot the camera position and rotation
+        plot_camera(ax, position, rotation_matrix, color=f'C{idx % 10}', length=120)
+
+    # Set the axes limits based on the camera positions
+    positions = np.array([camera_info.T for camera_info in camera_infos])
+    ax.set_xlim([positions[:, 0].min(), positions[:, 0].max()])
+    ax.set_ylim([positions[:, 1].min(), positions[:, 1].max()])
+    ax.set_zlim([positions[:, 2].min(), positions[:, 2].max()])
+
+    # Set the labels
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    plt.show()
+
+
+# Retrieve camera infos
+camera_infos = getCameraInfos()
+
+# Visualize the camera movement
+visualize_camera_info(camera_infos)
+
+
