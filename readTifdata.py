@@ -1,3 +1,7 @@
+# This file is used for the walnut dicom data to construciton the 3D
+
+
+
 import os
 import uuid
 import numpy as np
