@@ -62,10 +62,6 @@ def extract_data_from_png_image(png_path, output_folder, col_width=0.05, row_wid
         R = extr[:3, :3]  # Rotation matrix
         T = extr[:3, 3]   # Translation vector
 
-        # Calculate Field of View (FoV)
-        detector_rows, detector_columns = rgba_image.shape[:2]
-        detector_column_width = detector_columns * col_width
-        detector_row_width = detector_rows * row_width
 
         FovY = 0.1
         FovX = 0.1
