@@ -1,4 +1,5 @@
 # This file has been use to convert the dicom image to the png format
+# This purpose of this file to to convert the dicom image to the png format and extract the informaiton
 import os
 import pydicom
 from PIL import Image

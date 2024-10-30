@@ -1,3 +1,5 @@
+# random test with the dicom and synthesis data, not use in the project
+
 import math
 import os
 import json
