@@ -1,4 +1,6 @@
-#use this file to crop the ply outlier for clear view
+
+
+""" updat input and out put file path to use for crop the ply outlier for clear view """
 
 import numpy as np
 from plyfile import PlyData, PlyElement
